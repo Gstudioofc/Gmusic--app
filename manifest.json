@@ -1,0 +1,15 @@
+{
+  "name": "Gmusic",
+  "short_name": "Gmusic",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0c0e14",
+  "theme_color": "#0c0e14",
+  "icons": [
+    {
+      "src": "assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Gmusic — gstudio</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0c0e14">
+<link rel="icon" href="assets/icon.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <img src="assets/icon.png" alt="Gmusic">
+    <div>
+      <h1>Gmusic</h1>
+      <p>by gstudio store</p>
+    </div>
+    <button id="installBtn" hidden>Instalar</button>
+  </header>
+  <main>
+    <section class="now">
+      <div class="cover" id="cover"></div>
+      <div class="meta">
+        <h2 id="title">Escolha uma música</h2>
+        <p id="artist">—</p>
+        <div class="progress-wrap">
+          <input type="range" id="progress" value="0" min="0" max="100">
+          <div class="time"><span id="cur">0:00</span><span id="dur">0:00</span></div>
+        </div>
+        <div class="controls">
+          <button id="prev">⏮</button>
+          <button id="play" class="big">▶</button>
+          <button id="next">⏭</button>
+        </div>
+      </div>
+    </section>
+    <section class="playlist">
+      <div class="head">
+        <h3>Sua biblioteca</h3>
+        <label class="add">
+          + Adicionar MP3
+          <input type="file" id="filePicker" accept="audio/*" multiple hidden>
+        </label>
+      </div>
+      <ul id="list"></ul>
+    </section>
+  </main>
+</div>
+<audio id="audio" preload="metadata"></audio>
+<script src="assets/app.js"></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
+</body>
+</html>
