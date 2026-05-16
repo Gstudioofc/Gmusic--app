@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Gmusic</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a0a">
+<style>
+:root{
+ --bg:#0a0a0a; --card:#141414; --text:#fff; --muted:#999;
+ --blue:#3A86D9; --green:#6BCB8A; --purple:#7B4FE5;
+ --grad:linear-gradient(135deg,var(--blue),var(--green),var(--purple));
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto;background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+header{padding:14px 16px;display:flex;align-items:center;gap:10px}
+header h1{margin:0;font-size:20px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700}
+#search{flex:1;padding:10px 14px;border-radius:12px;border:none;background:var(--card);color:#fff;outline:none}
+main{flex:1;overflow:auto;padding:0 16px 120px}
+.view{display:none}.view.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:12px}
+.card{background:var(--card);border-radius:14px;padding:10px;cursor:pointer;transition:.2s}
+.card:active{transform:scale(.98)}
+.card img{width:100%;aspect-ratio:1;border-radius:10px;object-fit:cover;background:#222}
+.card h3{margin:8px 0 2px;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card p{margin:0;color:var(--muted);font-size:12px}
+.list-item{display:flex;align-items:center;gap:12px;padding:10px;background:var(--card);border-radius:12px;margin-bottom:8px;cursor:pointer}
+.list-item img{width:48px;height:48px;border-radius:8px;object-fit:cover}
+.player{position:fixed;left:0;right:0;bottom:72px;background:#111;border-top:1px solid #222;padding:10px 12px}
+.player-inner{display:flex;align-items:center;gap:10px}
+.player img{width:44px;height:44px;border-radius:8px}
+.player-info{flex:1;min-width:0}
+.player-info div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.player-info small{color:var(--muted)}
+.controls{display:flex;gap:8px}
+.btn{background:var(--grad);border:none;color:#000;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700}
+.progress{height:3px;background:#333;border-radius:2px;margin-top:6px;overflow:hidden}
+.bar{height:100%;width:0;background:var(--grad);transition:width .1s linear}
+.nav{position:fixed;left:0;right:0;bottom:0;height:72px;background:#000;border-top:1px solid #222;display:flex;justify-content:space-around;align-items:center;padding-bottom:env(safe-area-inset-bottom)}
+.nav button{background:none;border:none;color:#666;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;padding:8px}
+.nav button.active{color:#fff}
+.nav svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2}
+.nav button.active svg{stroke:url(#grad)}
+.fab{position:fixed;right:16px;bottom:150px;width:56px;height:56px;border-radius:50%;background:var(--grad);border:none;color:#000;font-size:28px;display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+#file{display:none}
+.empty{color:var(--muted);text-align:center;margin-top:40px}
+</style>
+</head>
+<body>
+<svg width="0" height="0"><defs><linearGradient id="grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3A86D9"/><stop offset="50%" stop-color="#6BCB8A"/><stop offset="100%" stop-color="#7B4FE5"/></linearGradient></defs></svg>
+
+<header>
+<h1>Gmusic</h1>
+<input id="search" placeholder="Buscar">
+</header>
+
+<main>
+ <section id="home" class="view active">
+   <div class="grid" id="homeGrid"></div>
+ </section>
+ <section id="searchView" class="view"><div id="searchRes"></div></section>
+ <section id="playlist" class="view"><div id="playList"></div><p class="empty" id="plEmpty">Nenhuma playlist ainda</p></section>
+ <section id="files" class="view"><div id="fileList"></div><p class="empty">Toque no + para adicionar suas músicas</p></section>
+</main>
+
+<div class="player" id="player" style="display:none">
+ <div class="player-inner">
+  <img id="pCover" src="">
+  <div class="player-info"><div id="pTitle"></div><small id="pArtist"></small></div>
+  <div class="controls">
+   <button class="btn" id="prev">‹</button>
+   <button class="btn" id="play">▶</button>
+   <button class="btn" id="next">›</button>
+  </div>
+ </div>
+ <div class="progress"><div class="bar" id="bar"></div></div>
+ <audio id="audio" preload="metadata"></audio>
+</div>
+
+<nav class="nav">
+ <button data-view="home" class="active"><svg viewBox="0 0 24 24"><path d="M3 10L12 3l9 7v10a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg>Home</button>
+ <button data-view="searchView"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Buscar</button>
+ <button data-view="playlist"><svg viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="7" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>Playlist</button>
+ <button data-view="files"><svg viewBox="0 0 24 24"><path d="M4 7h5l2 3h9v9a2 2 0 0 1-2 2H4z"/></svg>Arquivos</button>
+</nav>
+
+<button class="fab" id="addBtn">+</button>
+<input type="file" id="file" accept="audio/*" multiple>
+
+<script>
+const demo=[
+ {t:"Sunset Drive",a:"Demo",u:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",c:"https://picsum.photos/300?1"},
+ {t:"Night Vibes",a:"Demo",u:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",c:"https://picsum.photos/300?2"},
+ {t:"Ocean Wave",a:"Demo",u:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",c:"https://picsum.photos/300?3"},
+];
+let songs=[...demo], idx=0, playing=false;
+const audio=document.getElementById('audio'), bar=document.getElementById('bar');
+const homeGrid=document.getElementById('homeGrid'), searchRes=document.getElementById('searchRes'), fileList=document.getElementById('fileList');
+const pCover=document.getElementById('pCover'), pTitle=document.getElementById('pTitle'), pArtist=document.getElementById('pArtist'), player=document.getElementById('player');
+
+function card(s,i){return `<div class="card" onclick="play(${i})"><img src="${s.c}" loading="lazy"><h3>${s.t}</h3><p>${s.a}</p></div>`}
+function renderHome(){homeGrid.innerHTML=songs.map(card).join('')}
+function renderFiles(){fileList.innerHTML=songs.slice(demo.length).map((s,i)=>`<div class="list-item" onclick="play(${i+demo.length})"><img src="${s.c}"><div><div>${s.t}</div><small style="color:#999">${s.a}</small></div></div>`).join('')}
+
+function play(i){idx=i;const s=songs[idx];audio.src=s.u;pCover.src=s.c;pTitle.textContent=s.t;pArtist.textContent=s.a;player.style.display='block';audio.play();document.getElementById('play').textContent='⏸';playing=true}
+document.getElementById('play').onclick=()=>playing?audio.pause():audio.play();
+audio.onplay=()=>{playing=true;document.getElementById('play').textContent='⏸'};audio.onpause=()=>{playing=false;document.getElementById('play').textContent='▶'};
+document.getElementById('next').onclick=()=>play((idx+1)%songs.length);
+document.getElementById('prev').onclick=()=>play((idx-1+songs.length)%songs.length);
+audio.ontimeupdate=()=>bar.style.width=(audio.currentTime/audio.duration*100||0)+'%';
+
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(b.dataset.view).classList.add('active')});
+
+document.getElementById('search').oninput=e=>{const q=e.target.value.toLowerCase();searchRes.innerHTML=songs.filter(s=>s.t.toLowerCase().includes(q)||s.a.toLowerCase().includes(q)).map((s,i)=>`<div class="list-item" onclick="play(${songs.indexOf(s)})"><img src="${s.c}"><div>${s.t}<br><small style="color:#999">${s.a}</small></div></div>`).join('');if(q)document.querySelector('[data-view="searchView"]').click()};
+
+document.getElementById('addBtn').onclick=()=>document.getElementById('file').click();
+document.getElementById('file').onchange=e=>{[...e.target.files].forEach(f=>{const u=URL.createObjectURL(f);songs.push({t:f.name.replace(/\.[^/.]+$/,''),a:'Meu arquivo',u,c:'https://picsum.photos/300?music'});});renderHome();renderFiles();localStorage.setItem('gm',JSON.stringify(songs.slice(demo.length).map(s=>({t:s.t,a:s.a}))))};
+
+renderHome();renderFiles();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}
+</script>
+</body>
+</html>
